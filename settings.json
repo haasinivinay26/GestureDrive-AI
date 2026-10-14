@@ -1,0 +1,17 @@
+{
+    "camera_index": 0,
+    "camera_preview_enabled": true,
+    "steering_sensitivity": 1.0,
+    "gesture_sensitivity": 0.7,
+    "sound_enabled": true,
+    "fullscreen": false,
+    "keyboard_fallback_enabled": true,
+    "difficulty": "Normal",
+    "high_score": 0,
+    "calibration_offset_x": 0.0,
+    "calibration_offset_y": 0.0,
+    "calibration_scale_angle": 1.0,
+    "neutral_tilt_deg": -3.58,
+    "neutral_mid_x": 0.54,
+    "steering_deadzone": 0.08
+}

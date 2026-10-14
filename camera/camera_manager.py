@@ -38,6 +38,7 @@ class CameraManager:
         self.current_state = GestureState()
         self.latest_preview_surface: Optional[pygame.Surface] = None
         self.latest_raw_frame: Optional[np.ndarray] = None
+        self.latest_hands_data: list = []
         self.is_connected = False
         self.error_message: Optional[str] = None
         self.measured_fps = 0.0
@@ -136,9 +137,16 @@ class CameraManager:
                 self.current_state = state
                 self.latest_preview_surface = surface
                 self.latest_raw_frame = frame
+                self.latest_hands_data = hands_data
 
             # Regulate capture rate to avoid CPU spinning
             time.sleep(1.0 / (CAMERA_FPS * 1.5))
+
+    def calibrate_center(self) -> bool:
+        """Zero the steering orientation based on the latest detected hands."""
+        with self.lock:
+            hands = list(self.latest_hands_data)
+        return self.recognizer.calibrate_center(hands)
 
     def _render_camera_hud(self, img_rgb: np.ndarray, state: GestureState):
         """Render cyberpunk HUD telemetry directly onto camera frame."""
@@ -151,12 +159,15 @@ class CameraManager:
         elif state.is_accelerating:
             bar_color = (50, 255, 120)    # Neon green
             text = "ACCEL ACTIVE [THUMBS UP]"
+        elif state.is_start_gesture:
+            bar_color = (255, 175, 20)    # Neon amber
+            text = f"START GESTURE: {state.start_status}"
         elif state.hands_detected >= 2:
             bar_color = (0, 240, 255)     # Neon cyan
-            text = f"WHEEL: {state.wheel_tilt_degrees:+.1f} deg"
+            text = f"WHEEL: {state.wheel_tilt_degrees:+.1f}° [{state.steer_direction}]"
         elif state.hands_detected == 1:
             bar_color = (255, 175, 20)    # Amber
-            text = "ASSIST MODE (1 HAND)"
+            text = f"1-HAND ASSIST [{state.steer_direction}]"
         else:
             bar_color = (120, 130, 150)   # Muted
             text = "WAITING FOR HANDS..."

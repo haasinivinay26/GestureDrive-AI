@@ -78,7 +78,7 @@ MAX_OFFROAD_SPEED = 60.0   # km/h maximum offroad speed
 CAR_STEER_RATE = 2.4       # Lateral movement sensitivity
 
 # Gesture Recognition Settings
-STEERING_DEADZONE = 0.05
+STEERING_DEADZONE = 0.08
 STEERING_SMOOTHING_ALPHA = 0.22
 GESTURE_CONFIRM_FRAMES = 3
 
@@ -98,6 +98,9 @@ class GameSettings:
     calibration_offset_x: float = 0.0
     calibration_offset_y: float = 0.0
     calibration_scale_angle: float = 1.0
+    neutral_tilt_deg: float = 0.0         # Calibrated neutral steering wheel tilt in degrees
+    neutral_mid_x: float = 0.5            # Calibrated horizontal midpoint between hands (0.0 to 1.0)
+    steering_deadzone: float = 0.08       # Center deadzone to prevent drift
 
     @classmethod
     def load(cls) -> "GameSettings":

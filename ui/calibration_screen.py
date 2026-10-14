@@ -35,26 +35,44 @@ class CalibrationScreen:
         self.font_btn = pygame.font.SysFont("Verdana", 16, bold=True)
 
         # Buttons
-        self.btn_back = UIButton(pygame.Rect(40, WINDOW_HEIGHT - 65, 160, 45), "CANCEL", self.font_btn, self.on_back)
-        self.btn_done = UIButton(pygame.Rect(WINDOW_WIDTH - 240, WINDOW_HEIGHT - 65, 200, 45), "START RACE", self.font_btn, self.on_finish, primary=True)
+        btn_y = WINDOW_HEIGHT - 65
+        self.btn_back = UIButton(pygame.Rect(40, btn_y, 160, 45), "CANCEL", self.font_btn, self.on_back)
+        self.btn_calib_center = UIButton(pygame.Rect(220, btn_y, 220, 45), "CALIBRATE CENTER", self.font_btn, self._calibrate_center)
+        self.btn_done = UIButton(pygame.Rect(WINDOW_WIDTH - 240, btn_y, 200, 45), "START RACE", self.font_btn, self.on_finish, primary=True)
+        self.calib_feedback_timer = 0.0
+
+    def _calibrate_center(self):
+        """Zero the neutral steering position directly."""
+        success = self.camera_mgr.calibrate_center()
+        if success:
+            self.calib_feedback_timer = 2.0
 
     def reset(self):
         """Reset calibration session."""
         self.calib_mgr.reset()
+        self.calib_feedback_timer = 0.0
 
     def handle_event(self, event: pygame.event.Event):
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self.on_back()
             return
+        elif event.type == pygame.KEYDOWN and event.key == pygame.K_c:
+            self._calibrate_center()
+            return
         self.btn_back.handle_event(event)
+        self.btn_calib_center.handle_event(event)
         if self.calib_mgr.is_finished:
             self.btn_done.handle_event(event)
 
     def update(self, dt: float):
         mouse_pos = pygame.mouse.get_pos()
         self.btn_back.update(dt, mouse_pos)
+        self.btn_calib_center.update(dt, mouse_pos)
         if self.calib_mgr.is_finished:
             self.btn_done.update(dt, mouse_pos)
+
+        if self.calib_feedback_timer > 0:
+            self.calib_feedback_timer -= dt
 
         # Advance calibration state machine with latest camera gestures
         state = self.camera_mgr.get_state()
@@ -141,5 +159,12 @@ class CalibrationScreen:
 
         # Buttons
         self.btn_back.draw(surface)
+        self.btn_calib_center.draw(surface)
         if self.calib_mgr.is_finished:
             self.btn_done.draw(surface)
+
+        if self.calib_feedback_timer > 0:
+            fb_rect = pygame.Rect(460, WINDOW_HEIGHT - 65, 230, 45)
+            draw_glow_rect(surface, fb_rect, (20, 40, 30), COLOR_NEON_GREEN, radius=6, glow_spread=2)
+            fb_txt = self.font_btn.render("CENTER CALIBRATED! ✓", True, COLOR_NEON_GREEN)
+            surface.blit(fb_txt, (fb_rect.centerx - fb_txt.get_width() // 2, fb_rect.centery - fb_txt.get_height() // 2))

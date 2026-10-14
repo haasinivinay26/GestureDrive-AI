@@ -144,9 +144,10 @@ class CalibrationManager:
         """Save calibrated profile to settings."""
         if self.neutral_samples > 0:
             avg_neutral = self.neutral_tilt_sum / self.neutral_samples
-            SETTINGS.calibration_offset_x = avg_neutral
+            SETTINGS.neutral_tilt_deg = round(avg_neutral, 2)
+            SETTINGS.calibration_offset_x = round(avg_neutral, 2)
         SETTINGS.save()
-        print("[Calibration] Calibrated settings saved successfully.")
+        print(f"[Calibration] Calibrated neutral settings saved: tilt={SETTINGS.neutral_tilt_deg} deg.")
 
     def get_step_info(self) -> Dict[str, Any]:
         """Return information for current calibration step."""

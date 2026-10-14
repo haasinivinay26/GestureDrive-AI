@@ -46,23 +46,25 @@ The application combines **Computer Vision** (OpenCV), **Deep Learning Hand Trac
 ## 4. Hand Gesture Controls Guide
 
 ```
-        STEERING WHEEL (Both Hands)              ACCELERATOR (Thumbs-Up)             BRAKE (Open Palm)
+     START RACE (Victory ✌️)        STEERING WHEEL (Both Hands)         ACCELERATOR (Thumbs-Up)          BRAKE (Open Palm)
    
-        Left Hand       Right Hand                    Either Hand                       Either Hand
-           [O]             [O]                            (Y)                              (|||||)
-            \               /                             / \                                / \
-             \  (Rotate)   /                             /   \                              /   \
-              \___________/                             Fist with                         All 5 Fingers
-                                                      Thumb Raised                      Spread Outward
-       Tilt Left  -> Turn Left                    Smooth Throttle Boost            Immediate Rapid Stop
-       Tilt Right -> Turn Right                                                 (Overrides Acceleration!)
+           Either Hand              Left Hand       Right Hand                Either Hand                    Either Hand
+              (V)                      [O]             [O]                        (Y)                           (|||||)
+              / \                       \               /                         / \                             / \
+             /   \                       \  (Rotate)   /                         /   \                           /   \
+           Index & Middle                 \___________/                         Fist with                       All 5 Fingers
+          Extended Upward                                                     Thumb Raised                    Spread Outward
+       Hold 1.0s in Menu to           Tilt Left  -> Turn Left              Smooth Throttle Boost          Immediate Rapid Stop
+        Launch the Race               Tilt Right -> Turn Right                                         (Overrides Acceleration!)
 ```
 
-### Steering Priority & Smoothing Rules:
-1. **Braking Priority:** If an open palm is detected on either hand, braking activates immediately and **completely cancels any throttle input**.
-2. **Debounce Hysteresis:** Discrete gestures (accelerator and brake) use a 3-frame rolling majority voting buffer to eliminate single-frame glitches.
-3. **Exponential Moving Average (EMA):** Steering angles are smoothed with $\alpha = 0.22$ plus a $0.05$ central deadzone, preventing hand jitter while delivering agile cornering.
-4. **Missing Hand Behavior:** If hands leave the camera frame, steering gently centers to $0.0$ and speed coasts down safely.
+### Steering Calibration & Neutral Drift Prevention:
+1. **Calibrate Center:** Click the **`CALIBRATE CENTER`** button (or press `C` in Camera Test / Calibration screen) while holding your hands comfortably. This records your resting tilt angle and horizontal camera midpoint as the exact zero-reference.
+2. **Zero-Drift Neutral Steering:** When hands are level or within the deadzone ($\pm 0.08$), steering output snaps strictly to `0.00 [CENTER]`. The vehicle maintains a perfectly straight course without lateral creeping.
+3. **Braking Priority:** If an open palm is detected on either hand, braking activates immediately and **completely cancels any throttle input**.
+4. **Single-Fire Start Gesture:** The starting gesture (Victory ✌️ or holding dual hands steady on the wheel) triggers race startup **exactly once**, preventing duplicate starts while held. In-game racing only processes throttle, brakes, and steering.
+5. **Debounce Hysteresis:** Discrete gestures (accelerator, brake, start) use temporal voting buffers to eliminate single-frame glitches.
+6. **Missing Hand Behavior:** If hands leave the camera frame, steering gently centers to `0.0` and speed coasts down safely.
 
 ---
 

@@ -147,7 +147,7 @@ class Dashboard:
         top_y = 15
 
         # Gesture Status Banner Panel
-        banner_w, banner_h = 360, 48
+        banner_w, banner_h = 440, 50
         banner_rect = pygame.Rect(center_x - banner_w // 2, top_y, banner_w, banner_h)
 
         if state.is_braking:
@@ -171,10 +171,15 @@ class Dashboard:
 
         # Active Gesture Icon & Name
         gest_surf = self.font_gesture.render(state.active_gesture, True, txt_c)
-        surface.blit(gest_surf, (banner_rect.centerx - gest_surf.get_width() // 2, banner_rect.centery - gest_surf.get_height() // 2))
+        surface.blit(gest_surf, (banner_rect.centerx - gest_surf.get_width() // 2, banner_rect.top + 8))
+
+        # Secondary telemetry line: Steering Direction & Accel status
+        sub_info = f"STEER: [{state.steer_direction}] ({state.steer_angle:+.2f})  |  ACCEL: {state.accel_status}"
+        sub_surf = self.font_label.render(sub_info, True, COLOR_TEXT_MUTED)
+        surface.blit(sub_surf, (banner_rect.centerx - sub_surf.get_width() // 2, banner_rect.top + 28))
 
         # Steering Wheel Angle Dial
-        wheel_dial_w, wheel_dial_h = 260, 36
+        wheel_dial_w, wheel_dial_h = 280, 36
         wheel_rect = pygame.Rect(center_x - wheel_dial_w // 2, top_y + banner_h + 8, wheel_dial_w, wheel_dial_h)
         draw_rounded_rect(surface, wheel_rect, (18, 22, 34), radius=6, border_color=COLOR_PANEL_BORDER, border_width=1)
 
@@ -188,10 +193,12 @@ class Dashboard:
         pygame.draw.circle(surface, border_c, (steer_px, mid_y), 7)
         pygame.draw.circle(surface, (255, 255, 255), (steer_px, mid_y), 9, width=1)
 
-        # Left / Right Labels
-        lbl_l = self.font_label.render("L", True, COLOR_TEXT_MUTED)
-        lbl_r = self.font_label.render("R", True, COLOR_TEXT_MUTED)
+        # Left / Center / Right Labels
+        lbl_l = self.font_label.render("LEFT", True, COLOR_TEXT_MUTED)
+        lbl_c = self.font_label.render("CENTER", True, COLOR_NEON_CYAN if state.steer_direction == "CENTER" else (70, 80, 100))
+        lbl_r = self.font_label.render("RIGHT", True, COLOR_TEXT_MUTED)
         surface.blit(lbl_l, (wheel_rect.left + 8, mid_y - lbl_l.get_height() // 2))
+        surface.blit(lbl_c, (wheel_rect.centerx - lbl_c.get_width() // 2, wheel_rect.top - 14))
         surface.blit(lbl_r, (wheel_rect.right - 8 - lbl_r.get_width(), mid_y - lbl_r.get_height() // 2))
 
     def _render_camera_pip(

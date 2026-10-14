@@ -79,11 +79,15 @@ class GestureDriveApp:
         )
 
         self.top_speed_achieved = 0.0
+        self.start_gesture_consumed = False
 
     def _set_state(self, new_state: str):
         """Transition between application screens."""
         self.state = new_state
-        if new_state == AppState.CALIBRATION:
+        if new_state == AppState.MAIN_MENU:
+            self.start_gesture_consumed = False
+            self.main_menu.reset_start_gesture()
+        elif new_state == AppState.CALIBRATION:
             self.calibration.reset()
 
     def _handle_menu_action(self, action: str):
@@ -103,6 +107,7 @@ class GestureDriveApp:
 
     def _start_race(self):
         """Initiate racing session."""
+        self.start_gesture_consumed = True
         self.top_speed_achieved = 0.0
         self.engine.start_new_race()
         self._set_state(AppState.RACING)
@@ -181,9 +186,13 @@ class GestureDriveApp:
                 elif self.state == AppState.RESULTS:
                     self.results_screen.handle_event(event)
 
+            # Retrieve latest gesture telemetry
+            gesture_state = self.camera_mgr.get_state()
+
             # 2. State Update
             if self.state == AppState.MAIN_MENU:
-                self.main_menu.update(dt)
+                is_start = gesture_state.is_start_gesture and not self.start_gesture_consumed
+                self.main_menu.update(dt, is_start_gesture_active=is_start)
             elif self.state == AppState.CAMERA_TEST:
                 self.camera_test.update(dt)
             elif self.state == AppState.CALIBRATION:
@@ -203,7 +212,7 @@ class GestureDriveApp:
 
             # 3. State Rendering
             if self.state == AppState.MAIN_MENU:
-                self.main_menu.draw(self.screen, self.camera_mgr.is_connected)
+                self.main_menu.draw(self.screen, self.camera_mgr.is_connected, gesture_state=gesture_state)
             elif self.state == AppState.CAMERA_TEST:
                 self.camera_test.draw(self.screen)
             elif self.state == AppState.CALIBRATION:
@@ -218,7 +227,6 @@ class GestureDriveApp:
                 # Render 3D world
                 self.engine.render(self.screen)
                 # Render HUD dashboard overlay
-                gesture_state = self.camera_mgr.get_state()
                 preview_surf = self.camera_mgr.get_preview_surface()
                 self.dashboard.draw(
                     surface=self.screen,

@@ -2,6 +2,8 @@
 Unit tests for core game simulation logic:
 - Car acceleration, braking, coasting, and off-road penalties
 - Priority of brake over throttle
+- Zero lateral drift during neutral steering even on sharp curves
+- Correct left and right steering movement
 - Track projection segment wrapping
 - Collision detection and near-miss bonuses
 - Scoring metrics and multiplier escalation
@@ -56,6 +58,35 @@ def test_car_offroad_penalty():
 
     # Speed should drop down towards MAX_OFFROAD_SPEED
     assert car.speed <= MAX_OFFROAD_SPEED + 15.0
+
+
+def test_car_neutral_steering_moves_dead_straight():
+    """When steering input is neutral (0.0), car lateral position must NOT drift even on curved road."""
+    car = PlayerCar()
+    car.speed = 120.0
+    car.x = 0.0
+
+    # Drive for 3 seconds on a sharp curve (curve = 3.5) with neutral steer (0.0)
+    for _ in range(30):
+        car.update(dt=0.1, steer_input=0.0, is_accel=True, is_brake=False, road_curve=3.5)
+
+    assert car.x == 0.0  # Must not drift at all!
+
+
+def test_car_steer_directions():
+    """Negative steer moves car left, positive steer moves car right."""
+    car = PlayerCar()
+    car.speed = 100.0
+    car.x = 0.0
+
+    # Steer left
+    car.update(dt=0.5, steer_input=-0.8, is_accel=True, is_brake=False, road_curve=0.0)
+    assert car.x < 0.0
+
+    # Steer right back to center and beyond
+    for _ in range(3):
+        car.update(dt=0.5, steer_input=0.8, is_accel=True, is_brake=False, road_curve=0.0)
+    assert car.x > 0.0
 
 
 def test_track_wrapping():

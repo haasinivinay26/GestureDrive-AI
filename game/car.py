@@ -92,10 +92,13 @@ class PlayerCar:
         # 3. Lateral movement across track (only turns when moving)
         speed_factor = self.speed / self.max_speed
         lateral_speed = speed_factor * CAR_STEER_RATE
-        self.x += self.steer_angle * lateral_speed * dt
 
-        # Centrifugal drift caused by sharp road curves
-        self.x -= (road_curve * speed_factor * 1.5) * dt
+        # Neutral steering lock: if steer_angle is zero or negligible, strictly keep moving straight
+        if abs(self.steer_angle) < 0.015:
+            self.steer_angle = 0.0
+        else:
+            self.x += self.steer_angle * lateral_speed * dt
+
         self.x = clamp(self.x, -1.8, 1.8)
 
         # 4. Advance distance along track
