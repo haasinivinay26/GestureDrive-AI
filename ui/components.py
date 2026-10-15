@@ -14,22 +14,36 @@ from utils.audio import AUDIO
 
 
 class UIButton:
-    """Interactive button with hover animation, neon glow, and click audio."""
+    """Interactive button with hover animation, neon glow, shortcut pill, and click audio."""
 
-    def __init__(self, rect: pygame.Rect, text: str, font: pygame.font.Font, on_click: Optional[Callable] = None, primary: bool = False):
+    def __init__(
+        self,
+        rect: pygame.Rect,
+        text: str,
+        font: pygame.font.Font,
+        on_click: Optional[Callable] = None,
+        primary: bool = False,
+        accent_color=COLOR_NEON_CYAN,
+        shortcut: Optional[str] = None
+    ):
         self.rect = rect
         self.text = text
         self.font = font
         self.on_click = on_click
         self.primary = primary
+        self.accent_color = accent_color
+        self.shortcut = shortcut
         self.is_hovered = False
         self.hover_progress = 0.0
+        self.pulse_timer = 0.0
+        self.font_badge = pygame.font.SysFont("Verdana", 11, bold=True)
 
     def update(self, dt: float, mouse_pos: Tuple[int, int]):
-        """Update hover transition state."""
+        """Update hover transition state and breathing pulse."""
         self.is_hovered = self.rect.collidepoint(mouse_pos)
         target = 1.0 if self.is_hovered else 0.0
         self.hover_progress += (target - self.hover_progress) * dt * 14.0
+        self.pulse_timer += dt * 3.0
 
     def handle_event(self, event: pygame.event.Event) -> bool:
         """Process mouse clicks."""
@@ -42,19 +56,44 @@ class UIButton:
         return False
 
     def draw(self, surface: pygame.Surface):
-        """Render button with dynamic glow and text."""
+        """Render button with modern glass styling and neon hover glow."""
         # Visual expansion on hover
-        border_c = COLOR_NEON_CYAN if (self.is_hovered or self.primary) else COLOR_PANEL_BORDER
-        bg_c = (28, 34, 52) if self.is_hovered else (18, 22, 34)
+        h_ratio = clamp(self.hover_progress, 0.0, 1.0)
 
-        if self.is_hovered or self.primary:
-            draw_glow_rect(surface, self.rect, bg_c, COLOR_NEON_CYAN, radius=8, glow_spread=3)
+        if self.is_hovered:
+            border_c = self.accent_color
+            bg_c = (int(22 + 15 * h_ratio), int(28 + 20 * h_ratio), int(46 + 30 * h_ratio))
+            glow_spread = int(2 + 3 * h_ratio)
+            draw_glow_rect(surface, self.rect, bg_c, border_c, radius=8, glow_spread=glow_spread)
+        elif self.primary:
+            # Subtle breathing glow for primary CTA
+            import math
+            pulse = 0.5 + 0.5 * math.sin(self.pulse_timer)
+            glow_c = (
+                int(self.accent_color[0] * (0.7 + 0.3 * pulse)),
+                int(self.accent_color[1] * (0.7 + 0.3 * pulse)),
+                int(self.accent_color[2] * (0.7 + 0.3 * pulse))
+            )
+            bg_c = (24, 30, 48)
+            draw_glow_rect(surface, self.rect, bg_c, glow_c, radius=8, glow_spread=2)
         else:
-            draw_rounded_rect(surface, self.rect, bg_c, radius=8, border_color=border_c, border_width=1)
+            bg_c = (18, 22, 34)
+            draw_rounded_rect(surface, self.rect, bg_c, radius=8, border_color=COLOR_PANEL_BORDER, border_width=1)
 
-        txt_color = COLOR_NEON_CYAN if self.is_hovered else COLOR_TEXT_WHITE
+        # Label text
+        txt_color = self.accent_color if self.is_hovered else (COLOR_TEXT_WHITE if not self.primary else COLOR_TEXT_WHITE)
         surf = self.font.render(self.text, True, txt_color)
         surface.blit(surf, (self.rect.centerx - surf.get_width() // 2, self.rect.centery - surf.get_height() // 2))
+
+        # Optional Shortcut Badge in top right corner
+        if self.shortcut:
+            badge_surf = self.font_badge.render(self.shortcut, True, self.accent_color if self.is_hovered else COLOR_TEXT_MUTED)
+            badge_w = badge_surf.get_width() + 10
+            badge_h = 16
+            badge_rect = pygame.Rect(self.rect.right - badge_w - 6, self.rect.top + 5, badge_w, badge_h)
+            draw_rounded_rect(surface, badge_rect, (28, 34, 52), radius=4, border_color=self.accent_color if self.is_hovered else (45, 55, 80), border_width=1)
+            surface.blit(badge_surf, (badge_rect.centerx - badge_surf.get_width() // 2, badge_rect.centery - badge_surf.get_height() // 2))
+
 
 
 class UISlider:

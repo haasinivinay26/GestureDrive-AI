@@ -13,7 +13,7 @@ from config import (
     MAX_SPEED_KMH, ACCELERATION_RATE, BRAKE_RATE,
     NATURAL_DECEL, OFFROAD_DECEL, MAX_OFFROAD_SPEED,
     CAR_STEER_RATE, COLOR_NEON_RED, COLOR_NEON_CYAN,
-    WINDOW_WIDTH, WINDOW_HEIGHT
+    WINDOW_WIDTH, WINDOW_HEIGHT, SETTINGS
 )
 from utils.helpers import clamp, lerp
 
@@ -138,8 +138,21 @@ class PlayerCar:
         self.particles = [p for p in self.particles if p.update(dt)]
 
     def draw(self, surface: pygame.Surface, is_braking: bool, is_accel: bool):
-        """Draw player sports car near bottom of screen."""
-        # Draw exhaust particles behind the car
+        """Draw player sports car near bottom of screen with aerodynamic body roll and visual telemetry."""
+        # 1. High-speed motion wind streaks when driving over 130 km/h
+        if self.speed > 130.0 and getattr(SETTINGS, "visual_effects", True):
+            speed_ratio = (self.speed - 130.0) / (self.max_speed - 130.0)
+            num_streaks = int(3 + 8 * speed_ratio)
+            for _ in range(num_streaks):
+                sx = random.randint(40, WINDOW_WIDTH - 40)
+                sy = random.randint(WINDOW_HEIGHT // 2, WINDOW_HEIGHT)
+                slen = random.randint(30, int(60 + 100 * speed_ratio))
+                alpha = random.randint(40, int(80 + 120 * speed_ratio))
+                s_surf = pygame.Surface((2, slen), pygame.SRCALPHA)
+                pygame.draw.line(s_surf, (200, 240, 255, alpha), (1, 0), (1, slen), 2)
+                surface.blit(s_surf, (sx, sy))
+
+        # 2. Draw exhaust particles behind the car
         for p in self.particles:
             p.draw(surface)
 
@@ -150,87 +163,101 @@ class PlayerCar:
         bounce_y = int(math.sin(self.bounce_timer) * 1.5) if self.speed > 40.0 else 0
         cy += bounce_y
 
-        car_w = 150
-        car_h = 75
+        car_w = 160
+        car_h = 80
 
         # Create rotated/tilted car surface for body roll
-        car_surf = pygame.Surface((car_w + 40, car_h + 30), pygame.SRCALPHA)
-        local_cx = (car_w + 40) // 2
-        local_cy = (car_h + 30) // 2
+        car_surf = pygame.Surface((car_w + 50, car_h + 40), pygame.SRCALPHA)
+        local_cx = (car_w + 50) // 2
+        local_cy = (car_h + 40) // 2
 
-        # 1. Shadow underneath car
-        shadow_rect = pygame.Rect(local_cx - car_w // 2 + 5, local_cy + 18, car_w - 10, 14)
-        pygame.draw.ellipse(car_surf, (10, 12, 18, 180), shadow_rect)
+        # 3. Soft Underglow reflection on tarmac (Cyan normally, Red when braking)
+        glow_color = (255, 30, 60, 90) if is_braking else (0, 220, 255, 75)
+        underglow_rect = pygame.Rect(local_cx - car_w // 2, local_cy + 16, car_w, 20)
+        pygame.draw.ellipse(car_surf, glow_color, underglow_rect)
 
-        # 2. Dual Rear Tires
-        tire_w, tire_h = 24, 42
+        # 4. Shadow underneath car
+        shadow_rect = pygame.Rect(local_cx - car_w // 2 + 8, local_cy + 18, car_w - 16, 15)
+        pygame.draw.ellipse(car_surf, (8, 10, 16, 210), shadow_rect)
+
+        # 5. Dual Rear Tires
+        tire_w, tire_h = 26, 44
         # Left tire
-        pygame.draw.rect(car_surf, (25, 28, 35), (local_cx - car_w // 2 + 2, local_cy - 4, tire_w, tire_h), border_radius=4)
-        pygame.draw.rect(car_surf, (60, 65, 80), (local_cx - car_w // 2 + 6, local_cy + 4, 12, 26), border_radius=2)
+        pygame.draw.rect(car_surf, (20, 24, 30), (local_cx - car_w // 2 + 2, local_cy - 4, tire_w, tire_h), border_radius=4)
+        pygame.draw.rect(car_surf, (45, 52, 68), (local_cx - car_w // 2 + 6, local_cy + 4, 14, 28), border_radius=2)
         # Right tire
-        pygame.draw.rect(car_surf, (25, 28, 35), (local_cx + car_w // 2 - tire_w - 2, local_cy - 4, tire_w, tire_h), border_radius=4)
-        pygame.draw.rect(car_surf, (60, 65, 80), (local_cx + car_w // 2 - tire_w + 2, local_cy + 4, 12, 26), border_radius=2)
+        pygame.draw.rect(car_surf, (20, 24, 30), (local_cx + car_w // 2 - tire_w - 2, local_cy - 4, tire_w, tire_h), border_radius=4)
+        pygame.draw.rect(car_surf, (45, 52, 68), (local_cx + car_w // 2 - tire_w + 4, local_cy + 4, 14, 28), border_radius=2)
 
-        # 3. Main Body Chassis (Sports supercar shape)
+        # 6. Main Body Chassis (Aggressive Sports supercar shape)
         body_points = [
-            (local_cx - 55, local_cy + 25),  # Bottom left
-            (local_cx - 65, local_cy + 5),   # Mid left flare
-            (local_cx - 48, local_cy - 18),  # Roof left
-            (local_cx + 48, local_cy - 18),  # Roof right
-            (local_cx + 65, local_cy + 5),   # Mid right flare
-            (local_cx + 55, local_cy + 25),  # Bottom right
+            (local_cx - 60, local_cy + 26),  # Bottom left
+            (local_cx - 72, local_cy + 6),   # Mid left flare
+            (local_cx - 52, local_cy - 20),  # Roof left
+            (local_cx + 52, local_cy - 20),  # Roof right
+            (local_cx + 72, local_cy + 6),   # Mid right flare
+            (local_cx + 60, local_cy + 26),  # Bottom right
         ]
-        # Primary chassis color: Cyber Blue / Electric Cobalt
-        pygame.draw.polygon(car_surf, (20, 75, 180), body_points)
+        # Cyber Blue / Electric Cobalt
+        pygame.draw.polygon(car_surf, (16, 65, 160), body_points)
         # Highlight contour
-        pygame.draw.lines(car_surf, (60, 140, 255), True, body_points, width=2)
+        pygame.draw.lines(car_surf, (50, 130, 245), True, body_points, width=2)
 
-        # 4. Rear Windshield Glass (dark reflective glass)
+        # 7. Rear Windshield Glass (reflective dark glass)
         windshield_points = [
-            (local_cx - 40, local_cy - 15),
-            (local_cx + 40, local_cy - 15),
-            (local_cx + 48, local_cy + 2),
-            (local_cx - 48, local_cy + 2),
+            (local_cx - 44, local_cy - 17),
+            (local_cx + 44, local_cy - 17),
+            (local_cx + 52, local_cy + 2),
+            (local_cx - 52, local_cy + 2),
         ]
-        pygame.draw.polygon(car_surf, (30, 40, 65), windshield_points)
-        pygame.draw.lines(car_surf, (100, 160, 230), True, windshield_points, width=1)
+        pygame.draw.polygon(car_surf, (25, 35, 55), windshield_points)
+        pygame.draw.lines(car_surf, (90, 150, 220), True, windshield_points, width=1)
 
-        # 5. Dual Racing Stripes (Neon Cyan)
+        # 8. Dual Racing Stripes (Neon Cyan)
         stripe_color = (0, 240, 255)
-        pygame.draw.rect(car_surf, stripe_color, (local_cx - 10, local_cy - 18, 6, 42))
-        pygame.draw.rect(car_surf, stripe_color, (local_cx + 4, local_cy - 18, 6, 42))
+        pygame.draw.rect(car_surf, stripe_color, (local_cx - 11, local_cy - 20, 6, 46))
+        pygame.draw.rect(car_surf, stripe_color, (local_cx + 5, local_cy - 20, 6, 46))
 
-        # 6. Rear Spoiler Wing
-        spoiler_w = 110
-        spoiler_y = local_cy - 22
-        pygame.draw.rect(car_surf, (15, 20, 32), (local_cx - spoiler_w // 2, spoiler_y, spoiler_w, 7), border_radius=2)
+        # 9. Rear Spoiler Wing
+        spoiler_w = 124
+        spoiler_y = local_cy - 25
+        pygame.draw.rect(car_surf, (12, 16, 26), (local_cx - spoiler_w // 2, spoiler_y, spoiler_w, 8), border_radius=2)
         pygame.draw.rect(car_surf, (0, 240, 255), (local_cx - spoiler_w // 2, spoiler_y, spoiler_w, 2))
         # Spoiler struts
-        pygame.draw.rect(car_surf, (20, 25, 40), (local_cx - 30, spoiler_y + 6, 6, 8))
-        pygame.draw.rect(car_surf, (20, 25, 40), (local_cx + 24, spoiler_y + 6, 6, 8))
+        pygame.draw.rect(car_surf, (16, 20, 32), (local_cx - 32, spoiler_y + 7, 7, 9))
+        pygame.draw.rect(car_surf, (16, 20, 32), (local_cx + 25, spoiler_y + 7, 7, 9))
 
-        # 7. Dual Exhaust Tips
+        # Active Steering Blinker Winglet Accents
+        if self.steer_angle < -0.15:
+            # Turning left -> left winglet flashes cyan
+            pygame.draw.rect(car_surf, (0, 255, 255), (local_cx - spoiler_w // 2 - 2, spoiler_y - 3, 5, 14), border_radius=2)
+        elif self.steer_angle > 0.15:
+            # Turning right -> right winglet flashes cyan
+            pygame.draw.rect(car_surf, (0, 255, 255), (local_cx + spoiler_w // 2 - 3, spoiler_y - 3, 5, 14), border_radius=2)
+
+        # 10. Dual Exhaust Tips
         pipe_color = (255, 180, 50) if is_accel else (140, 145, 160)
-        pygame.draw.circle(car_surf, pipe_color, (local_cx - 32, local_cy + 24), 5)
-        pygame.draw.circle(car_surf, pipe_color, (local_cx + 32, local_cy + 24), 5)
+        pygame.draw.circle(car_surf, pipe_color, (local_cx - 34, local_cy + 25), 5)
+        pygame.draw.circle(car_surf, pipe_color, (local_cx + 34, local_cy + 25), 5)
 
-        # 8. LED Taillights (Intense Red with Brake Glow)
-        light_color = (255, 20, 50) if is_braking else (180, 20, 40)
-        light_w = 32
-        light_h = 8
-        # Left taillight
-        pygame.draw.rect(car_surf, light_color, (local_cx - 56, local_cy + 6, light_w, light_h), border_radius=3)
-        # Right taillight
-        pygame.draw.rect(car_surf, light_color, (local_cx + 24, local_cy + 6, light_w, light_h), border_radius=3)
+        # 11. Continuous Hypercar LED Lightbar (Red with intense Brake Bloom)
+        light_color = (255, 20, 50) if is_braking else (190, 20, 40)
+        lightbar_pts = [
+            (local_cx - 62, local_cy + 8),
+            (local_cx - 20, local_cy + 13),
+            (local_cx + 20, local_cy + 13),
+            (local_cx + 62, local_cy + 8),
+        ]
+        pygame.draw.lines(car_surf, light_color, False, lightbar_pts, width=5 if is_braking else 3)
 
         # Taillight brake glow bloom
         if is_braking:
-            glow_l = pygame.Rect(local_cx - 62, local_cy + 1, light_w + 12, light_h + 10)
-            glow_r = pygame.Rect(local_cx + 18, local_cy + 1, light_w + 12, light_h + 10)
-            pygame.draw.rect(car_surf, (255, 50, 80, 100), glow_l, border_radius=5)
-            pygame.draw.rect(car_surf, (255, 50, 80, 100), glow_r, border_radius=5)
+            glow_surf = pygame.Surface((car_w + 50, car_h + 40), pygame.SRCALPHA)
+            pygame.draw.lines(glow_surf, (255, 50, 80, 120), False, lightbar_pts, width=12)
+            car_surf.blit(glow_surf, (0, 0))
 
         # Rotate car surface for body roll lean
         rotated_surf = pygame.transform.rotate(car_surf, -self.visual_tilt)
         rot_rect = rotated_surf.get_rect(center=(cx, cy))
         surface.blit(rotated_surf, rot_rect)
+

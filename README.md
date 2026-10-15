@@ -1,7 +1,7 @@
 # GestureDrive AI — Camera-Controlled Car Racing Game Using Hand Gestures
 
-> **Tagline:** *"Your Hands. Your Road. Your Race."*  
-> **Target Audience:** College Technology Expo / BCA Final Year Exhibition  
+> **Tagline:** *"Your Hands. Your Controls. Your Race."*  
+> **Target Audience:** College Technology Expo / Final Year Exhibition  
 > **Platform:** Windows Desktop Native Application (100% Python, No External Hardware Required)
 
 ---
@@ -10,15 +10,23 @@
 
 **GestureDrive AI** is an interactive, native desktop car racing game built entirely in **Python**. It enables players to drive a high-performance racing car in real time using intuitive **hand gestures** captured by a standard webcam—completely eliminating the need for keyboards, mice, gamepads, or physical steering wheels.
 
-The application combines **Computer Vision** (OpenCV), **Deep Learning Hand Tracking** (Google MediaPipe), and **Arcade Game Physics with Pseudo-3D Scanline Projection** (Pygame & NumPy) into a responsive 60 FPS gameplay experience designed specifically for live exhibition demonstrations.
+The application combines **Computer Vision** (OpenCV), **Deep Learning Hand Tracking** (Google MediaPipe), and **Arcade Game Physics with Pseudo-3D Scanline Projection** (Pygame & NumPy) into a responsive 60 FPS gameplay experience designed specifically for live exhibition demonstrations with a modern, dark cyber-racing UI.
 
 ---
 
-## 2. Key Features
+## 2. Key Features & Modern Racing Interface
 
-- **Imaginary Steering Wheel Control:** Hold both hands in the air and tilt left or right to steer smoothly. Hand lateral shifts and single-hand assist are also dynamically supported.
+- **Modern Cyber-Racing Aesthetic:** Dark theme featuring deep cosmic asphalt, neon cyan (`#00F0FF`), electric blue, and fiery amber accents with glassmorphic translucent panels.
+- **Showcase Supercar Landing Page:** Full-screen landing page featuring an exotic procedural supercar parked on an asphalt racetrack with wet tarmac reflections, animated atmospheric light motes, and a live Start Ready gesture detection HUD.
+- **Peripheral Cockpit HUD:** Ergonomic peripheral HUD layout that leaves the central road and oncoming traffic 100% unobstructed. Includes curved tachometer arc, digital speed readout, gear/boost mode, and stealth steering chevrons.
+- **Imaginary Steering Wheel Control:** Hold both hands in the air and tilt left or right to steer smoothly. Hand lateral shifts and single-hand assist are dynamically supported.
 - **Thumbs-Up Accelerator:** Raise a deliberate thumbs-up gesture to accelerate. Releasing the gesture naturally coasts the car down.
 - **Open-Palm Brake (Strict Priority):** Flash an open palm with all 5 fingers spread to trigger rapid deceleration and stop the vehicle. Braking **strictly overrides acceleration** to ensure safety.
+- **Starting Gesture Recognition:** Display ✌️ Victory/Peace sign or hold hands steady on the wheel for 1 second on the main menu to launch the race with a visual progress meter.
+- **Interactive Pause Modal:** Glassmorphic modal overlay offering Resume, Quick Restart, How to Play, Settings, and Main Menu.
+- **Comprehensive 6-Card Tutorial:** Step-by-step visual gesture guides covering Left Turn, Right Turn, Straight/Neutral Deadzone, Acceleration, Braking, and Starting Gesture, plus hardware setup tips.
+- **Championship Telemetry Results:** Post-race summary detailing final score, top speed, total distance, obstacles dodged, and performance rank (S/A/B/C).
+
 - **Background Multithreaded Vision Pipeline:** Camera frame capture and MediaPipe landmark tracking execute on an asynchronous worker thread. The game loop maintains a rock-solid **60 FPS** with zero frame stutter or webcam latency.
 - **Pseudo-3D Arcade Road Engine:** Classic OutRun-inspired scanline perspective rendering with road curves, rolling elevation hills, alternating asphalt stripes, roadside lampposts, billboards, and trees.
 - **AI Traffic & Track Hazards:** Dodge rival AI vehicles weaving between lanes, road barriers, traffic cones, and oil slicks.

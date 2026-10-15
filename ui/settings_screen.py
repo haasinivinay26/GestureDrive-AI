@@ -1,7 +1,7 @@
 """
 Interactive Settings Screen for GestureDrive AI.
-Allows configuring camera selection, steering sensitivity, gesture thresholds,
-sound effects, fullscreen toggle, difficulty, and keyboard fallback with instant persistence.
+Allows configuring camera selection, steering sensitivity, gesture confidence,
+audio effects, visual effects, fullscreen toggle, difficulty, and keyboard fallback.
 """
 
 import pygame
@@ -13,7 +13,7 @@ from config import (
     COLOR_PANEL_BG, COLOR_PANEL_BORDER, COLOR_TEXT_WHITE, COLOR_TEXT_MUTED
 )
 from ui.components import UIButton, UISlider, UIToggle
-from utils.helpers import draw_rounded_rect, draw_glow_rect, render_text_with_shadow
+from utils.helpers import draw_rounded_rect, draw_glow_rect, draw_glass_rect, render_text_with_shadow
 
 
 class SettingsScreen:
@@ -24,74 +24,81 @@ class SettingsScreen:
         self.on_toggle_fullscreen = on_toggle_fullscreen
 
         # Fonts
-        self.font_title = pygame.font.SysFont("Impact", 42)
-        self.font_header = pygame.font.SysFont("Verdana", 17, bold=True)
-        self.font_label = pygame.font.SysFont("Verdana", 14)
-        self.font_btn = pygame.font.SysFont("Verdana", 15, bold=True)
+        self.font_title = pygame.font.SysFont("Impact", 44)
+        self.font_header = pygame.font.SysFont("Verdana", 15, bold=True)
+        self.font_label = pygame.font.SysFont("Verdana", 13)
+        self.font_btn = pygame.font.SysFont("Verdana", 14, bold=True)
 
-        # Build Interactive Controls
-        card_x = 80
-        col_w = 520
+        card_x = 70
+        col_w = 540
 
-        # Sliders
+        # Left Column: Sensitivities and Preferences
         self.slider_steering = UISlider(
-            rect=pygame.Rect(card_x, 150, col_w, 14),
+            rect=pygame.Rect(card_x, 150, col_w, 12),
             min_val=0.4, max_val=2.5, current_val=SETTINGS.steering_sensitivity,
             label="Steering Sensitivity", font=self.font_label,
             on_change=lambda v: setattr(SETTINGS, "steering_sensitivity", v)
         )
 
         self.slider_gesture = UISlider(
-            rect=pygame.Rect(card_x, 230, col_w, 14),
+            rect=pygame.Rect(card_x, 225, col_w, 12),
             min_val=0.4, max_val=0.95, current_val=SETTINGS.gesture_sensitivity,
             label="Gesture Detection Confidence", font=self.font_label,
             on_change=lambda v: setattr(SETTINGS, "gesture_sensitivity", v)
         )
 
-        # Toggles
         self.toggle_preview = UIToggle(
-            rect=pygame.Rect(card_x, 290, col_w, 36),
+            rect=pygame.Rect(card_x, 280, col_w, 34),
             state=SETTINGS.camera_preview_enabled, label="Live Webcam HUD Preview (PIP)", font=self.font_label,
             on_toggle=lambda s: setattr(SETTINGS, "camera_preview_enabled", s)
         )
 
         self.toggle_sound = UIToggle(
-            rect=pygame.Rect(card_x, 345, col_w, 36),
+            rect=pygame.Rect(card_x, 330, col_w, 34),
             state=SETTINGS.sound_enabled, label="Sound Effects & Procedural Audio", font=self.font_label,
             on_toggle=lambda s: setattr(SETTINGS, "sound_enabled", s)
         )
 
+        self.toggle_vfx = UIToggle(
+            rect=pygame.Rect(card_x, 380, col_w, 34),
+            state=getattr(SETTINGS, "visual_effects", True), label="Visual Motion Effects & Speed Streaks", font=self.font_label,
+            on_toggle=lambda s: setattr(SETTINGS, "visual_effects", s)
+        )
+
         self.toggle_keyboard = UIToggle(
-            rect=pygame.Rect(card_x, 400, col_w, 36),
+            rect=pygame.Rect(card_x, 430, col_w, 34),
             state=SETTINGS.keyboard_fallback_enabled, label="Keyboard Fallback Controls (Arrow / WASD)", font=self.font_label,
             on_toggle=lambda s: setattr(SETTINGS, "keyboard_fallback_enabled", s)
         )
 
         self.toggle_fullscreen = UIToggle(
-            rect=pygame.Rect(card_x, 455, col_w, 36),
-            state=SETTINGS.fullscreen, label="Fullscreen Display Mode", font=self.font_label,
+            rect=pygame.Rect(card_x, 480, col_w, 34),
+            state=SETTINGS.fullscreen, label="Fullscreen Display Mode (F11)", font=self.font_label,
             on_toggle=self._handle_fullscreen_toggle
         )
 
-        # Right Column: Difficulty and Camera Selector
-        right_x = card_x + col_w + 80
-        right_w = 480
+        # Right Column: Camera Hardware and Traffic Difficulty
+        right_x = card_x + col_w + 60
+        right_w = WINDOW_WIDTH - right_x - 70
 
-        self.btn_cam_0 = UIButton(pygame.Rect(right_x, 150, 140, 38), "Cam #0", self.font_btn, lambda: self._set_cam(0))
-        self.btn_cam_1 = UIButton(pygame.Rect(right_x + 155, 150, 140, 38), "Cam #1", self.font_btn, lambda: self._set_cam(1))
-        self.btn_cam_2 = UIButton(pygame.Rect(right_x + 310, 150, 140, 38), "Cam #2", self.font_btn, lambda: self._set_cam(2))
+        # Camera selection buttons
+        btn_cam_w = 140
+        self.btn_cam_0 = UIButton(pygame.Rect(right_x, 150, btn_cam_w, 38), "Cam #0 (Default)", self.font_btn, lambda: self._set_cam(0))
+        self.btn_cam_1 = UIButton(pygame.Rect(right_x + 150, 150, btn_cam_w, 38), "Cam #1 (Ext)", self.font_btn, lambda: self._set_cam(1))
+        self.btn_cam_2 = UIButton(pygame.Rect(right_x + 300, 150, btn_cam_w, 38), "Cam #2 (Aux)", self.font_btn, lambda: self._set_cam(2))
         self._update_cam_buttons()
 
-        # Difficulty Buttons
-        self.btn_diff_easy = UIButton(pygame.Rect(right_x, 270, 140, 38), "Easy", self.font_btn, lambda: self._set_diff("Easy"))
-        self.btn_diff_norm = UIButton(pygame.Rect(right_x + 155, 270, 140, 38), "Normal", self.font_btn, lambda: self._set_diff("Normal"))
-        self.btn_diff_hard = UIButton(pygame.Rect(right_x + 310, 270, 140, 38), "Hard", self.font_btn, lambda: self._set_diff("Hard"))
+        # Traffic difficulty selection
+        diff_w = 140
+        self.btn_diff_easy = UIButton(pygame.Rect(right_x, 265, diff_w, 38), "Easy Mode", self.font_btn, lambda: self._set_diff("Easy"))
+        self.btn_diff_norm = UIButton(pygame.Rect(right_x + 150, 265, diff_w, 38), "Normal Mode", self.font_btn, lambda: self._set_diff("Normal"))
+        self.btn_diff_hard = UIButton(pygame.Rect(right_x + 300, 265, diff_w, 38), "Hard Mode", self.font_btn, lambda: self._set_diff("Hard"))
         self._update_diff_buttons()
 
-        # Save & Back Button
+        # Save & Return Button
         self.btn_save_back = UIButton(
-            pygame.Rect(WINDOW_WIDTH // 2 - 120, WINDOW_HEIGHT - 65, 240, 45),
-            "SAVE & RETURN", self.font_btn, self._save_and_back, primary=True
+            pygame.Rect(WINDOW_WIDTH // 2 - 130, WINDOW_HEIGHT - 65, 260, 44),
+            "SAVE & RETURN", self.font_btn, self._save_and_back, primary=True, shortcut="[ESC]"
         )
 
     def _handle_fullscreen_toggle(self, is_fs: bool):
@@ -130,6 +137,7 @@ class SettingsScreen:
         self.slider_gesture.handle_event(event)
         self.toggle_preview.handle_event(event)
         self.toggle_sound.handle_event(event)
+        self.toggle_vfx.handle_event(event)
         self.toggle_keyboard.handle_event(event)
         self.toggle_fullscreen.handle_event(event)
 
@@ -154,33 +162,63 @@ class SettingsScreen:
         self.btn_save_back.update(dt, mouse_pos)
 
     def draw(self, surface: pygame.Surface):
-        surface.fill((14, 16, 24))
+        surface.fill((8, 10, 16))
 
         # Title
-        title_surf = render_text_with_shadow(self.font_title, "SYSTEM SETTINGS", COLOR_NEON_CYAN, (0, 0, 0), (2, 2))
-        surface.blit(title_surf, (80, 25))
+        title_surf = render_text_with_shadow(self.font_title, "SYSTEM & SIMULATION SETTINGS", COLOR_NEON_CYAN, (0, 0, 0), (2, 2))
+        surface.blit(title_surf, (70, 22))
 
-        # Left Column: Sensitivity & Toggles
+        # Left Column Card Container
+        col_w = 540
+        left_card = pygame.Rect(55, 95, col_w + 30, 440)
+        draw_glass_rect(surface, left_card, bg_rgba=(14, 18, 28, 220), border_color=(35, 48, 70), radius=10)
+
+        left_lbl = self.font_header.render("CONTROLS & DISPLAY SETTINGS", True, COLOR_NEON_CYAN)
+        surface.blit(left_lbl, (70, 110))
+
         self.slider_steering.draw(surface)
         self.slider_gesture.draw(surface)
         self.toggle_preview.draw(surface)
         self.toggle_sound.draw(surface)
+        self.toggle_vfx.draw(surface)
         self.toggle_keyboard.draw(surface)
         self.toggle_fullscreen.draw(surface)
 
-        # Right Column Header
-        right_x = 80 + 520 + 80
-        cam_lbl = self.font_header.render("CAMERA HARDWARE DEVICE", True, COLOR_NEON_CYAN)
-        surface.blit(cam_lbl, (right_x, 115))
+        # Right Column Card Container
+        right_x = 70 + col_w + 60
+        right_w = WINDOW_WIDTH - right_x - 70
+        right_card = pygame.Rect(right_x - 15, 95, right_w + 30, 440)
+        draw_glass_rect(surface, right_card, bg_rgba=(14, 18, 28, 220), border_color=(35, 48, 70), radius=10)
+
+        cam_lbl = self.font_header.render("CAMERA HARDWARE SELECTION", True, COLOR_NEON_CYAN)
+        surface.blit(cam_lbl, (right_x, 110))
         self.btn_cam_0.draw(surface)
         self.btn_cam_1.draw(surface)
         self.btn_cam_2.draw(surface)
 
         diff_lbl = self.font_header.render("AI TRAFFIC DIFFICULTY", True, COLOR_NEON_CYAN)
-        surface.blit(diff_lbl, (right_x, 230))
+        surface.blit(diff_lbl, (right_x, 225))
         self.btn_diff_easy.draw(surface)
         self.btn_diff_norm.draw(surface)
         self.btn_diff_hard.draw(surface)
 
-        # Bottom
+        # Quick Tip
+        tip_y = 350
+        tip_box = pygame.Rect(right_x, tip_y, right_w, 140)
+        draw_glass_rect(surface, tip_box, bg_rgba=(18, 24, 38, 200), border_color=COLOR_NEON_AMBER, radius=8)
+        tip_t = self.font_btn.render("PRO TIP FOR COLLEGE EXPO", True, COLOR_NEON_AMBER)
+        surface.blit(tip_t, (right_x + 16, tip_y + 14))
+
+        tip_lines = [
+            "• Use 'Camera Test' to confirm 30 FPS tracking before presenting.",
+            "• If your hands sit naturally at a slight angle, tap 'Calibrate Center'.",
+            "• Settings auto-save and persist across game launches.",
+        ]
+        ty = tip_y + 44
+        for line in tip_lines:
+            ls = self.font_label.render(line, True, COLOR_TEXT_MUTED)
+            surface.blit(ls, (right_x + 16, ty))
+            ty += 24
+
+        # Bottom Action Button
         self.btn_save_back.draw(surface)

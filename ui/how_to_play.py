@@ -1,6 +1,11 @@
 """
 How to Play & College Expo Presentation Screen for GestureDrive AI.
-Features interactive visual gesture cards and academic technology architecture explanations.
+Features interactive visual cards for all 6 supported driving gestures:
+- Steering Left, Steering Right, Straight/Neutral Hold
+- Accelerate (Thumbs-up)
+- Brake (Open palm)
+- Starting Gesture (Victory sign ✌️ / Wheel ready)
+Includes camera distance/lighting setup guide and academic architecture overview.
 """
 
 import pygame
@@ -12,7 +17,7 @@ from config import (
     COLOR_PANEL_BG, COLOR_PANEL_BORDER, COLOR_TEXT_WHITE, COLOR_TEXT_MUTED
 )
 from ui.components import UIButton
-from utils.helpers import draw_rounded_rect, draw_glow_rect, render_text_with_shadow
+from utils.helpers import draw_rounded_rect, draw_glow_rect, draw_glass_rect, render_text_with_shadow
 
 
 class HowToPlayScreen:
@@ -21,22 +26,23 @@ class HowToPlayScreen:
     def __init__(self, on_back: Callable[[], None], on_test_cam: Callable[[], None]):
         self.on_back = on_back
         self.on_test_cam = on_test_cam
-        self.active_tab = 0  # 0: How to Play, 1: Technology Architecture
+        self.active_tab = 0  # 0: Gesture Controls, 1: Camera Setup & Tech Architecture
 
         # Fonts
-        self.font_title = pygame.font.SysFont("Impact", 42)
-        self.font_tab = pygame.font.SysFont("Verdana", 16, bold=True)
-        self.font_card_title = pygame.font.SysFont("Verdana", 17, bold=True)
-        self.font_body = pygame.font.SysFont("Verdana", 13)
-        self.font_hint = pygame.font.SysFont("Verdana", 12)
+        self.font_title = pygame.font.SysFont("Impact", 44)
+        self.font_tab = pygame.font.SysFont("Verdana", 15, bold=True)
+        self.font_card_title = pygame.font.SysFont("Verdana", 14, bold=True)
+        self.font_body = pygame.font.SysFont("Verdana", 12)
+        self.font_badge = pygame.font.SysFont("Verdana", 10, bold=True)
+        self.font_tips = pygame.font.SysFont("Verdana", 12)
 
         # Tab Buttons
-        self.btn_tab_play = UIButton(pygame.Rect(40, 90, 240, 40), "1. HOW TO PLAY", self.font_tab, lambda: self._set_tab(0), primary=True)
-        self.btn_tab_tech = UIButton(pygame.Rect(300, 90, 280, 40), "2. TECH EXPO ARCHITECTURE", self.font_tab, lambda: self._set_tab(1))
+        self.btn_tab_play = UIButton(pygame.Rect(60, 85, 230, 38), "1. GESTURE CONTROLS", self.font_tab, lambda: self._set_tab(0), primary=True)
+        self.btn_tab_tech = UIButton(pygame.Rect(305, 85, 270, 38), "2. CAMERA SETUP & TECH", self.font_tab, lambda: self._set_tab(1))
 
         # Action Buttons
-        self.btn_back = UIButton(pygame.Rect(40, WINDOW_HEIGHT - 65, 160, 45), "BACK TO MENU", self.font_tab, self.on_back)
-        self.btn_cam = UIButton(pygame.Rect(WINDOW_WIDTH - 240, WINDOW_HEIGHT - 65, 200, 45), "TEST CAMERA NOW", self.font_tab, self.on_test_cam, primary=True)
+        self.btn_back = UIButton(pygame.Rect(60, WINDOW_HEIGHT - 60, 160, 42), "BACK TO MENU", self.font_tab, self.on_back, shortcut="[ESC]")
+        self.btn_cam = UIButton(pygame.Rect(WINDOW_WIDTH - 250, WINDOW_HEIGHT - 60, 190, 42), "TEST CAMERA NOW", self.font_tab, self.on_test_cam, primary=True)
 
     def _set_tab(self, idx: int):
         self.active_tab = idx
@@ -60,145 +66,214 @@ class HowToPlayScreen:
         self.btn_cam.update(dt, mouse_pos)
 
     def draw(self, surface: pygame.Surface):
-        surface.fill((14, 16, 24))
+        surface.fill((8, 10, 16))
 
         # Title
-        title_surf = render_text_with_shadow(self.font_title, "HOW TO PLAY & EXPO GUIDE", COLOR_NEON_CYAN, (0, 0, 0), (2, 2))
-        surface.blit(title_surf, (40, 25))
+        title_surf = render_text_with_shadow(self.font_title, "HOW TO PLAY — GESTURE CONTROLS", COLOR_NEON_CYAN, (0, 0, 0), (2, 2))
+        surface.blit(title_surf, (60, 22))
 
         # Tabs
         self.btn_tab_play.draw(surface)
         self.btn_tab_tech.draw(surface)
 
         if self.active_tab == 0:
-            self._render_how_to_play(surface)
+            self._render_gesture_cards(surface)
         else:
-            self._render_tech_architecture(surface)
+            self._render_camera_and_architecture(surface)
 
         # Bottom Buttons
         self.btn_back.draw(surface)
         self.btn_cam.draw(surface)
 
-    def _render_how_to_play(self, surface: pygame.Surface):
-        """Render 3 distinct gesture instruction cards."""
-        card_w = 370
-        card_h = 430
-        card_y = 150
-        gap = 25
-        start_x = 40
+    def _render_gesture_cards(self, surface: pygame.Surface):
+        """Render 6 detailed gesture cards (2 rows of 3)."""
+        card_w = 365
+        card_h = 205
+        gap_x = 24
+        gap_y = 16
+        start_x = 60
+        start_y = 135
 
         cards = [
             {
-                "title": "STEERING WHEEL",
-                "badge": "BOTH HANDS",
+                "title": "STEERING LEFT",
+                "badge": "TILT WHEEL",
                 "color": COLOR_NEON_CYAN,
+                "icon": "◄",
                 "lines": [
-                    "Hold both hands up in front of the camera",
-                    "like gripping an imaginary steering wheel.",
-                    "",
-                    "- Rotate hands LEFT (left down, right up)",
-                    "  to steer the car left.",
-                    "- Rotate hands RIGHT (right down, left up)",
-                    "  to steer the car right.",
-                    "- Returning hands level centers steering.",
-                    "",
-                    "Single-hand assist is also supported!"
+                    "Hold both hands up in front of the camera.",
+                    "Rotate hands counter-clockwise:",
+                    "• Left hand DOWN, Right hand UP",
+                    "The car smoothly steers left across lanes.",
+                    "Single-hand assist is also supported."
                 ]
             },
             {
-                "title": "ACCELERATOR",
+                "title": "STRAIGHT / NEUTRAL",
+                "badge": "LEVEL HANDS",
+                "color": (120, 180, 255),
+                "icon": "▲",
+                "lines": [
+                    "Hold both hands level at equal heights.",
+                    "Within the calibrated neutral deadzone,",
+                    "the car drives dead straight without drift.",
+                    "Even on sharp curves, zero lateral drag",
+                    "keeps you locked in your current lane."
+                ]
+            },
+            {
+                "title": "STEERING RIGHT",
+                "badge": "TILT WHEEL",
+                "color": COLOR_NEON_CYAN,
+                "icon": "►",
+                "lines": [
+                    "Hold both hands up in front of the camera.",
+                    "Rotate hands clockwise:",
+                    "• Right hand DOWN, Left hand UP",
+                    "The car smoothly steers right across lanes.",
+                    "Angle determines turning sharpness."
+                ]
+            },
+            {
+                "title": "ACCELERATION",
                 "badge": "THUMBS-UP",
                 "color": COLOR_NEON_GREEN,
+                "icon": "👍",
                 "lines": [
-                    "Give a deliberate THUMBS-UP with",
-                    "either hand to accelerate.",
-                    "",
-                    "- Keep your other 4 fingers curled into a fist.",
-                    "- Hold thumbs-up to smoothly gain speed.",
-                    "- Release the gesture to coast naturally.",
-                    "",
-                    "High speeds unlock 2.5x score multipliers!"
+                    "Extend thumb UPWARD with other 4 fingers",
+                    "curled into a fist. Works on either hand.",
+                    "• Smoothly gains speed up to 220 KM/H",
+                    "• High speeds unlock 2.5x score multiplier",
+                    "Release gesture to coast naturally."
                 ]
             },
             {
-                "title": "BRAKE COMMAND",
+                "title": "BRAKING & STOP",
                 "badge": "OPEN PALM",
                 "color": COLOR_NEON_RED,
+                "icon": "✋",
                 "lines": [
                     "Show an OPEN PALM with all 5 fingers",
-                    "spread outward towards the camera.",
-                    "",
-                    "- Rapidly decelerates vehicle speed.",
-                    "- Holding open-palm keeps brakes locked.",
-                    "- Brakes override acceleration unconditionally!",
-                    "",
-                    "Essential for dodging sudden hazards."
+                    "spread outward facing the camera.",
+                    "• Rapid deceleration down to full stop",
+                    "• Strictly overrides acceleration priority",
+                    "Critical for avoiding sudden traffic hazards."
                 ]
-            }
+            },
+            {
+                "title": "START RACE",
+                "badge": "PEACE / 2 HANDS",
+                "color": COLOR_NEON_AMBER,
+                "icon": "✌️",
+                "lines": [
+                    "Show ✌️ Victory/Peace sign or grip wheel",
+                    "with both hands on the main menu.",
+                    "• Hold steady for 1 second",
+                    "• On-screen progress meter confirms start",
+                    "Prevents accidental starts."
+                ]
+            },
         ]
 
         for i, card in enumerate(cards):
-            cx = start_x + i * (card_w + gap)
-            rect = pygame.Rect(cx, card_y, card_w, card_h)
-            draw_glow_rect(surface, rect, (20, 24, 36), card["color"], radius=10, glow_spread=2)
+            col = i % 3
+            row = i // 3
+            cx = start_x + col * (card_w + gap_x)
+            cy = start_y + row * (card_h + gap_y)
 
-            # Card Header
-            t_surf = self.font_card_title.render(card["title"], True, card["color"])
-            surface.blit(t_surf, (cx + 20, card_y + 20))
+            rect = pygame.Rect(cx, cy, card_w, card_h)
+            draw_glass_rect(surface, rect, bg_rgba=(16, 20, 32, 220), border_color=(35, 48, 70), radius=10)
 
-            badge_rect = pygame.Rect(cx + card_w - 130, card_y + 18, 110, 24)
-            draw_rounded_rect(surface, badge_rect, (30, 36, 52), radius=4, border_color=card["color"], border_width=1)
-            b_surf = self.font_hint.render(card["badge"], True, card["color"])
-            surface.blit(b_surf, (badge_rect.centerx - b_surf.get_width() // 2, badge_rect.centery - b_surf.get_height() // 2))
+            # Left accent highlight
+            accent_rect = pygame.Rect(cx + 4, cy + 8, 3, card_h - 16)
+            draw_rounded_rect(surface, accent_rect, card["color"], radius=2)
 
-            # Body Lines
-            line_y = card_y + 70
+            # Header & Badge
+            t_surf = self.font_card_title.render(f"{card['icon']}  {card['title']}", True, card["color"])
+            surface.blit(t_surf, (cx + 16, cy + 14))
+
+            badge_surf = self.font_badge.render(card["badge"], True, card["color"])
+            bw = badge_surf.get_width() + 12
+            badge_rect = pygame.Rect(cx + card_w - bw - 14, cy + 12, bw, 20)
+            draw_rounded_rect(surface, badge_rect, (24, 30, 48), radius=4, border_color=card["color"], border_width=1)
+            surface.blit(badge_surf, (badge_rect.centerx - badge_surf.get_width() // 2, badge_rect.centery - badge_surf.get_height() // 2))
+
+            # Body lines
+            line_y = cy + 46
             for line in card["lines"]:
-                l_surf = self.font_body.render(line, True, COLOR_TEXT_WHITE if line.startswith("-") else COLOR_TEXT_MUTED)
-                surface.blit(l_surf, (cx + 20, line_y))
+                is_bullet = line.startswith("•")
+                color = COLOR_TEXT_WHITE if is_bullet else COLOR_TEXT_MUTED
+                l_surf = self.font_body.render(line, True, color)
+                surface.blit(l_surf, (cx + 16, line_y))
                 line_y += 24
 
-    def _render_tech_architecture(self, surface: pygame.Surface):
-        """Render Academic Technology Architecture Breakdown."""
-        card_w = 570
-        card_h = 200
-        start_x = 40
-        card_y = 150
-        gap_y = 25
-        gap_x = 25
+    def _render_camera_and_architecture(self, surface: pygame.Surface):
+        """Render Camera Placement Setup Tips and Academic Technology Architecture."""
+        start_x = 60
+        start_y = 135
 
-        modules = [
-            (start_x, card_y, "1. COMPUTER VISION PIPELINE", COLOR_NEON_CYAN, [
-                "Powered by OpenCV (cv2) on a dedicated asynchronous thread.",
-                "Captures 30 FPS video frames, normalizes aspect ratios,",
-                "and mirrors camera input for natural driving orientation."
-            ]),
-            (start_x + card_w + gap_x, card_y, "2. 3D HAND LANDMARK DETECTION", COLOR_NEON_GREEN, [
-                "Powered by Google MediaPipe Hands framework.",
-                "Extracts 21 3D coordinates (x, y, z) per hand in real-time.",
-                "Renders cyber-neon skeletal overlay on live PIP feed."
-            ]),
-            (start_x, card_y + card_h + gap_y, "3. GESTURE RECOGNITION ENGINE", COLOR_NEON_AMBER, [
-                "Trigonometric steering angle calculation via atan2(dy, dx).",
-                "Knuckle joint curl heuristics for thumbs-up and open-palm.",
-                "Debounce hysteresis buffer & strict brake-over-throttle priority."
-            ]),
-            (start_x + card_w + gap_x, card_y + card_h + gap_y, "4. PSEUDO-3D RACING SIMULATION", COLOR_NEON_PURPLE if 'COLOR_NEON_PURPLE' in globals() else COLOR_NEON_CYAN, [
-                "Built natively with Pygame and NumPy.",
-                "Classic OutRun scanline road projection with curves and hills.",
-                "Procedural 44.1kHz audio synthesis for engine revving and tire screech."
-            ]),
+        # 1. Camera Setup Guide Card (Left side)
+        guide_w = 480
+        guide_h = 425
+        guide_rect = pygame.Rect(start_x, start_y, guide_w, guide_h)
+        draw_glass_rect(surface, guide_rect, bg_rgba=(16, 20, 32, 220), border_color=COLOR_NEON_CYAN, radius=10)
+
+        t_cam = self.font_card_title.render("OPTIMAL CAMERA & HARDWARE SETUP", True, COLOR_NEON_CYAN)
+        surface.blit(t_cam, (start_x + 20, start_y + 18))
+
+        tips = [
+            ("CAMERA DISTANCE", "Sit 1.5 to 3.0 feet (45-90 cm) directly in front of the webcam."),
+            ("LIGHTING CONDITIONS", "Ensure face and hands are clearly lit from the front. Avoid harsh backlights or bright windows behind you."),
+            ("HAND POSITIONING", "Keep hands within the upper center of the camera frame for fastest landmark recognition."),
+            ("STEERING CALIBRATION", "Use 'Calibrate Center' on the main menu to zero out your natural resting hand angle."),
+            ("KEYBOARD FALLBACK", "Arrow keys (←, →, ↑, ↓) and WASD are always ready if camera access is interrupted."),
+            ("WEBCAM DIAGNOSTICS", "Click 'TEST CAMERA NOW' to view the live skeleton overlay and check your FPS."),
         ]
 
-        for x, y, title, color, lines in modules:
-            rect = pygame.Rect(x, y, card_w, card_h)
-            draw_glow_rect(surface, rect, (20, 24, 36), color, radius=8, glow_spread=2)
+        ty = start_y + 55
+        for heading, body in tips:
+            h_s = self.font_badge.render(f"• {heading}", True, COLOR_NEON_GREEN)
+            surface.blit(h_s, (start_x + 20, ty))
+            b_s = self.font_body.render(body, True, COLOR_TEXT_MUTED)
+            surface.blit(b_s, (start_x + 20, ty + 18))
+            ty += 56
 
-            t_surf = self.font_card_title.render(title, True, color)
-            surface.blit(t_surf, (x + 20, y + 18))
+        # 2. Technology Architecture Cards (Right side)
+        arch_x = start_x + guide_w + 25
+        arch_w = WINDOW_WIDTH - arch_x - 60
 
-            ly = y + 55
+        modules = [
+            ("1. COMPUTER VISION PIPELINE", COLOR_NEON_CYAN, "Powered by OpenCV (cv2) on a dedicated background thread running at 30 FPS. Captures, normalizes aspect ratios, and mirrors video for natural steering."),
+            ("2. 3D HAND LANDMARK TRACKING", COLOR_NEON_GREEN, "Powered by Google MediaPipe. Extracts 21 3D coordinates (x, y, z) per hand in real-time and renders cyber-neon skeletal overlays on the live HUD preview."),
+            ("3. GESTURE RECOGNITION ENGINE", COLOR_NEON_AMBER, "Uses trigonometric steering angle math atan2(dy, dx), knuckle curl heuristics for thumbs-up and open palm, debouncing buffers, and strict brake-over-accel priority."),
+            ("4. PSEUDO-3D RACING SIMULATION", (180, 80, 255), "Built natively with Pygame and NumPy. Features OutRun scanline road projection, rolling hills, responsive physics, procedural audio, and AI opponent traffic."),
+        ]
+
+        my = start_y
+        for title, color, desc in modules:
+            m_rect = pygame.Rect(arch_x, my, arch_w, 95)
+            draw_glass_rect(surface, m_rect, bg_rgba=(16, 20, 32, 220), border_color=(35, 48, 70), radius=8)
+
+            m_title = self.font_card_title.render(title, True, color)
+            surface.blit(m_title, (arch_x + 18, my + 12))
+
+            # Multi-line word wrap or clean split
+            words = desc.split()
+            lines = []
+            curr = ""
+            for w in words:
+                if len(curr + " " + w) > 75:
+                    lines.append(curr)
+                    curr = w
+                else:
+                    curr = curr + " " + w if curr else w
+            if curr:
+                lines.append(curr)
+
+            ly = my + 38
             for l in lines:
-                ls = self.font_body.render(l, True, COLOR_TEXT_WHITE)
-                surface.blit(ls, (x + 20, ly))
-                ly += 26
+                l_s = self.font_body.render(l, True, COLOR_TEXT_MUTED)
+                surface.blit(l_s, (arch_x + 18, ly))
+                ly += 20
+
+            my += 110

@@ -56,7 +56,7 @@ class GestureDriveApp:
 
         # 3. Initialize Game Engine & UI Screens
         self.engine = GameEngine(self.camera_mgr)
-        self.dashboard = Dashboard()
+        self.dashboard = Dashboard(on_pause_action=self._handle_pause_action)
 
         self.main_menu = MainMenu(on_action=self._handle_menu_action)
         self.camera_test = CameraTestScreen(self.camera_mgr, on_back=lambda: self._set_state(AppState.MAIN_MENU))
@@ -104,6 +104,27 @@ class GestureDriveApp:
             self._set_state(AppState.SETTINGS)
         elif action == "EXIT":
             self.running = False
+
+    def _handle_pause_action(self, action: str):
+        """Dispatch pause menu modal actions."""
+        if action in ("RESUME", "TOGGLE_PAUSE"):
+            if self.engine.state == EngineState.PAUSED:
+                self.engine.state = EngineState.RACING
+                AUDIO.start_engine()
+            elif self.engine.state == EngineState.RACING:
+                self.engine.state = EngineState.PAUSED
+                AUDIO.stop_engine()
+        elif action == "RESTART":
+            self._start_race()
+        elif action == "HOW_TO_PLAY":
+            AUDIO.stop_engine()
+            self._set_state(AppState.HOW_TO_PLAY)
+        elif action == "SETTINGS":
+            AUDIO.stop_engine()
+            self._set_state(AppState.SETTINGS)
+        elif action == "MENU":
+            AUDIO.stop_engine()
+            self._set_state(AppState.MAIN_MENU)
 
     def _start_race(self):
         """Initiate racing session."""
@@ -159,18 +180,21 @@ class GestureDriveApp:
                     elif self.state == AppState.RACING:
                         if event.key in (pygame.K_ESCAPE, pygame.K_p):
                             # Toggle Pause
-                            if self.engine.state == EngineState.RACING:
-                                self.engine.state = EngineState.PAUSED
-                                AUDIO.stop_engine()
-                            elif self.engine.state == EngineState.PAUSED:
-                                self.engine.state = EngineState.RACING
-                                AUDIO.start_engine()
+                            self._handle_pause_action("TOGGLE_PAUSE")
                         elif event.key == pygame.K_r:
                             # Quick restart for expo
                             self._start_race()
                         elif event.key == pygame.K_q and self.engine.state == EngineState.PAUSED:
-                            AUDIO.stop_engine()
-                            self._set_state(AppState.MAIN_MENU)
+                            self._handle_pause_action("MENU")
+                        elif event.key == pygame.K_h and self.engine.state == EngineState.PAUSED:
+                            self._handle_pause_action("HOW_TO_PLAY")
+                        elif event.key == pygame.K_s and self.engine.state == EngineState.PAUSED:
+                            self._handle_pause_action("SETTINGS")
+                        elif event.key == pygame.K_c:
+                            # Reconnect camera if needed
+                            if not self.camera_mgr.is_connected:
+                                print("[App] Attempting camera reconnection...")
+                                self.camera_mgr.start()
 
                 # Pass events to current screen
                 if self.state == AppState.MAIN_MENU:
@@ -185,6 +209,9 @@ class GestureDriveApp:
                     self.settings_screen.handle_event(event)
                 elif self.state == AppState.RESULTS:
                     self.results_screen.handle_event(event)
+                elif self.state == AppState.RACING:
+                    self.dashboard.handle_event(event, is_paused=(self.engine.state == EngineState.PAUSED))
+
 
             # Retrieve latest gesture telemetry
             gesture_state = self.camera_mgr.get_state()

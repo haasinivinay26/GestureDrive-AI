@@ -176,20 +176,31 @@ class TrackManager:
                 self._render_sprite(surface, seg, sprite)
 
     def _render_sky_and_horizon(self, surface: pygame.Surface, player_x: float):
-        """Draw gradient sky, horizon mountains, and cyber grid."""
+        """Draw gradient sky, distant stars, horizon mountains, and neon grid."""
         w, h = WINDOW_WIDTH, WINDOW_HEIGHT
         horizon_y = h // 2
 
-        # Sky gradient: Deep space purple-blue down to cyan twilight
-        pygame.draw.rect(surface, (14, 16, 32), (0, 0, w, horizon_y))
-        pygame.draw.rect(surface, (28, 32, 60), (0, horizon_y - 80, w, 80))
+        # Sky gradient: Deep space navy down to twilight indigo
+        pygame.draw.rect(surface, (8, 10, 20), (0, 0, w, horizon_y))
+        pygame.draw.rect(surface, (16, 22, 42), (0, horizon_y - 100, w, 100))
+
+        # Static stars in upper sky (deterministic positions)
+        for i in range(25):
+            sx = (i * 53 + 17) % w
+            sy = (i * 29 + 11) % (horizon_y - 70)
+            star_c = (200, 230, 255) if i % 3 == 0 else (140, 170, 210)
+            pygame.draw.circle(surface, star_c, (sx, sy), 1 if i % 2 == 0 else 2)
 
         # Distant mountain silhouettes that shift with player steering (parallax effect)
-        parallax_shift = int(-player_x * 80) % w
-        for mountain_x in range(-w, w * 2, 240):
+        parallax_shift = int(-player_x * 90) % w
+        for mountain_x in range(-w, w * 2, 220):
             mx = mountain_x + parallax_shift
-            pts = [(mx, horizon_y), (mx + 120, horizon_y - 75), (mx + 240, horizon_y)]
-            pygame.draw.polygon(surface, (20, 24, 46), pts)
+            pts = [(mx, horizon_y), (mx + 110, horizon_y - 65), (mx + 220, horizon_y)]
+            pygame.draw.polygon(surface, (15, 20, 36), pts)
+
+        # Neon horizon twilight strip
+        pygame.draw.line(surface, (0, 160, 220), (0, horizon_y), (w, horizon_y), 2)
+
 
     def _render_segment_poly(self, surface: pygame.Surface, seg1: RoadSegment, seg2: RoadSegment):
         """Draw trapezoids for grass, rumble curbs, asphalt, and white lane dashes."""

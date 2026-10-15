@@ -83,7 +83,7 @@ class CameraTestScreen:
             self.calib_feedback_timer -= dt
 
     def draw(self, surface: pygame.Surface):
-        surface.fill((14, 16, 24))
+        surface.fill((8, 10, 16))
 
         # Title
         title_surf = render_text_with_shadow(self.font_title, "WEBCAM & GESTURE DIAGNOSTICS", COLOR_NEON_CYAN, (0, 0, 0), (2, 2))

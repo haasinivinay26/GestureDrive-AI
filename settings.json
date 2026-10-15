@@ -6,6 +6,7 @@
     "sound_enabled": true,
     "fullscreen": false,
     "keyboard_fallback_enabled": true,
+    "visual_effects": true,
     "difficulty": "Normal",
     "high_score": 0,
     "calibration_offset_x": 0.0,

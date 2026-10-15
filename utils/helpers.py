@@ -4,6 +4,7 @@ Provides math utilities, color blending, drawing primitives, and surface manipul
 """
 
 import math
+from typing import Tuple
 import pygame
 
 
@@ -50,6 +51,29 @@ def draw_glow_rect(surface: pygame.Surface, rect: pygame.Rect, color, glow_color
     pygame.draw.rect(surface, glow_color, rect, width=2, border_radius=radius)
 
 
+def draw_glass_rect(surface: pygame.Surface, rect: pygame.Rect, bg_rgba=(16, 20, 34, 210), border_color=(45, 60, 90), radius: int = 8, border_width: int = 1):
+    """Draw a modern semi-transparent glassmorphic panel."""
+    glass = pygame.Surface((rect.width, rect.height), pygame.SRCALPHA)
+    pygame.draw.rect(glass, bg_rgba, glass.get_rect(), border_radius=radius)
+    if border_color and border_width > 0:
+        pygame.draw.rect(glass, border_color, glass.get_rect(), width=border_width, border_radius=radius)
+    surface.blit(glass, rect.topleft)
+
+
+def draw_arc(surface: pygame.Surface, color, center: Tuple[int, int], radius: int, start_deg: float, end_deg: float, width: int = 4):
+    """Draw a smooth anti-aliased arc using polyline segments."""
+    cx, cy = center
+    steps = max(3, int(abs(end_deg - start_deg) / 6.0))
+    pts = []
+    for i in range(steps + 1):
+        ang_rad = math.radians(start_deg + (end_deg - start_deg) * (i / steps))
+        px = cx + math.cos(ang_rad) * radius
+        py = cy + math.sin(ang_rad) * radius
+        pts.append((px, py))
+    if len(pts) >= 2:
+        pygame.draw.lines(surface, color, False, pts, width=width)
+
+
 def render_text_with_shadow(font: pygame.font.Font, text: str, color, shadow_color=(0, 0, 0), offset=(2, 2)) -> pygame.Surface:
     """Render text with a drop shadow."""
     text_surf = font.render(text, True, color)
@@ -60,3 +84,4 @@ def render_text_with_shadow(font: pygame.font.Font, text: str, color, shadow_col
     combined.blit(shadow_surf, (max(0, offset[0]), max(0, offset[1])))
     combined.blit(text_surf, (max(0, -offset[0]), max(0, -offset[1])))
     return combined
+

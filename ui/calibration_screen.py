@@ -79,7 +79,7 @@ class CalibrationScreen:
         self.step_progress = self.calib_mgr.update(dt, state)
 
     def draw(self, surface: pygame.Surface):
-        surface.fill((14, 16, 24))
+        surface.fill((8, 10, 16))
 
         # Title
         title_surf = render_text_with_shadow(self.font_title, "GESTURE CALIBRATION WIZARD", COLOR_NEON_CYAN, (0, 0, 0), (2, 2))

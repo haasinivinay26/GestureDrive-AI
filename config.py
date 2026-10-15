@@ -17,7 +17,7 @@ SETTINGS_FILE = os.path.join(BASE_DIR, "settings.json")
 
 # Display and Window Configuration
 GAME_TITLE = "GestureDrive AI"
-TAGLINE = "Your Hands. Your Road. Your Race."
+TAGLINE = "Your Hands. Your Controls. Your Race."
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
 TARGET_FPS = 60
@@ -42,19 +42,19 @@ COLOR_TEXT_WHITE = (245, 248, 255)
 COLOR_TEXT_MUTED = (140, 155, 180)
 COLOR_DARK_OVERLAY = (0, 0, 0, 160)
 
-# Road 3D Projection Colors
+# Road 3D Projection Colors (Dark Cyber Racing Theme)
 ROAD_COLORS = {
     "light": {
-        "road": (105, 108, 115),
-        "grass": (24, 120, 48),
-        "rumble": (240, 240, 240),
-        "lane": (255, 255, 255),
+        "road": (44, 48, 62),
+        "grass": (14, 18, 28),
+        "rumble": (0, 230, 255),       # Neon Cyan curb
+        "lane": (240, 250, 255),       # Crisp luminous white dash
     },
     "dark": {
-        "road": (92, 95, 102),
-        "grass": (18, 100, 38),
-        "rumble": (210, 30, 45),
-        "lane": (92, 95, 102),  # Hidden on dark segments
+        "road": (36, 40, 52),
+        "grass": (10, 13, 22),
+        "rumble": (255, 35, 65),       # Laser Crimson curb
+        "lane": (36, 40, 52),          # Hidden on dark segments
     },
 }
 
@@ -93,6 +93,7 @@ class GameSettings:
     sound_enabled: bool = True
     fullscreen: bool = False
     keyboard_fallback_enabled: bool = True
+    visual_effects: bool = True           # High-speed motion streaks, particles, road glow
     difficulty: str = "Normal"            # Easy, Normal, Hard
     high_score: int = 0
     calibration_offset_x: float = 0.0
