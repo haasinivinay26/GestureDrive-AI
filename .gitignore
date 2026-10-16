@@ -13,3 +13,6 @@ env/
 
 # Audio cache if generated
 *.wav.tmp
+
+# Archives
+*.zip

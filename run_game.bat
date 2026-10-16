@@ -1,7 +1,7 @@
 @echo off
 title GestureDrive AI — Camera-Controlled Car Racing
 echo =======================================================
-echo   GestureDrive AI: "Your Hands. Your Road. Your Race."
+echo   GestureDrive AI: "Your Hands. Your Controls. Your Race."
 echo   College Tech Expo Edition
 echo =======================================================
 echo.
