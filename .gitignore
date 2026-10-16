@@ -1,18 +1,7 @@
-# Byte-compiled / optimized / DLL files
+venv/
+.venv/
 __pycache__/
 *.py[cod]
-*$py.class
-
-# Virtual environments
-venv/
-env/
-.env
-
-# Pytest / Cache
 .pytest_cache/
-
-# Audio cache if generated
-*.wav.tmp
-
-# Archives
-*.zip
+.env
+GestureDrive_AI.zip
